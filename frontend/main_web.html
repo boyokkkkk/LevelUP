@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- 网页基础设置和引入资源 -->
+    <meta charset="UTF-8">
+    <title>LevelUP - 个性化知识成长系统</title>
+    <!-- 引入 Vue 3 CDN，用于构建交互式前端界面 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入 Google Fonts - Roboto 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- 内嵌样式表，定义了整个页面的视觉风格和布局 -->
+    <style>
+        /* CSS 变量定义，方便统一管理颜色主题 */
+        :root {
+            /* 主题色变量，极简清新风格 */
+            --main-bg: #fff;              /* 主背景色，用于页面背景和卡片背景 */
+            --main-text: #222;            /* 主文字色，用于大部分文本 */
+            --main-purple: #6b4eff;       /* 紫蓝色，作为主题强调色，用于Logo、标题、按钮、进度条等 */
+            --main-blue: #9cd6ff;         /* 浅蓝色，作为辅助色，用于进度条背景、次要按钮等 */
+            --main-border: #e6eaf0;       /* 卡片和侧边栏边框的淡色 */
+            --main-gray: #888;            /* 次要文字色，用于更新时间等信息 */
+        }
+        body {
+            font-family: 'Roboto', 'Segoe UI', sans-serif; /* 字体设置，优先使用 Roboto */
+            margin: 0; /* 移除默认外边距 */
+            background: var(--main-bg); /* 应用主背景色 */
+            color: var(--main-text); /* 应用主文字色 */
+            /* 新增背景纹理效果 */
+            background-image: radial-gradient(circle at center, rgba(107, 78, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        /* 导航头部样式 */
+        .nav-header {
+            display: flex; /* Flex布局，使子项水平排列 */
+            align-items: center; /* 垂直居中对齐 */
+            justify-content: space-between; /* 子项两端对齐 */
+            background: var(--main-bg); /* 白色导航栏背景 */
+            padding: 0 40px; /* 左右内边距 */
+            height: 60px; /* 固定高度 */
+            box-shadow: 0 2px 8px rgba(107, 78, 255, 0.08); /* 底部阴影，轻微突出 */
+            /* 新增加载动画 */
+            opacity: 0;
+            animation: fadeInDown 0.8s ease-out forwards;
+        }
+        /* 定义导航栏渐入动画 */
+        @keyframes fadeInDown {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* 导航栏Logo样式 */
+        .nav-logo {
+            font-size: 2em; /* 字体大小 */
+            font-weight: bold; /* 粗体 */
+            color: var(--main-purple); /* Logo颜色 */
+            letter-spacing: 2px; /* 字符间距 */
+        }
+        /* 导航栏搜索区域样式 */
+        .nav-search {
+            flex: 1; /* 占据可用空间 */
+            display: flex; /* Flex布局 */
+            justify-content: center; /* 搜索框水平居中 */
+        }
+        /* 导航栏搜索输入框样式 */
+        .nav-search input {
+            padding: 8px 16px; /* 内边距 */
+            border-radius: 8px; /* 圆角 */
+            border: none; /* 无边框 */
+            width: 400px; /* 固定宽度 */
+            font-size: 1em; /* 字体大小 */
+            outline: none; /* 移除聚焦时的轮廓 */
+            background: #f8fafc; /* 背景色 */
+            color: var(--main-text); /* 文字颜色 */
+            box-shadow: 0 2px 8px rgba(163, 216, 255, 0.04); /* 轻微阴影 */
+        }
+        /* 导航栏用户头像样式 */
+        .nav-avatar img {
+            border-radius: 50%; /* 圆形头像 */
+            width: 40px; /* 宽度 */
+            border: 2px solid var(--main-purple); /* 边框颜色 */
+        }
+        /* 主内容区域容器样式 */
+        .container {
+            display: flex; /* Flex布局，使侧边栏和主内容区水平排列 */
+            padding: 24px 0 0 8px; /* 上内边距和左内边距 */
+            gap: 20px; /* 子项之间的间距 */
+            max-width: 1300px; /* 最大宽度 */
+            margin: 0 auto; /* 水平居中 */
+        }
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 220px; /* 固定宽度 */
+            background: var(--main-bg); /* 背景色 */
+            border-radius: 12px; /* 圆角 */
+            padding: 18px 16px; /* 内边距 */
+            box-shadow: 0 2px 8px rgba(163, 216, 255, 0.06); /* 阴影 */
+            min-width: 180px; /* 最小宽度，防止内容过多时过度缩小 */
+            border: 1.5px solid var(--main-border); /* 边框 */
+        }
+        /* 侧边栏标题样式 */
+        .sidebar h3 {
+            color: var(--main-purple); /* 标题颜色 */
+            margin-bottom: 10px; /* 底部外边距 */
+            font-size: 1.1em; /* 字体大小 */
+        }
+        /* 侧边栏用户头像样式 */
+        .sidebar .avatar {
+            display: block; /* 块级元素，使其可以设置margin: auto居中 */
+            margin: 0 auto 10px auto; /* 水平居中，底部外边距 */
+            border-radius: 50%; /* 圆形头像 */
+            width: 64px; /* 宽度 */
+            height: 64px; /* 高度 */
+            object-fit: cover; /* 图像填充方式 */
+            border: 2px solid var(--main-purple); /* 边框 */
+        }
+        /* 侧边栏用户名样式 */
+        .sidebar .username {
+            text-align: center; /* 文本居中 */
+            font-weight: bold; /* 粗体 */
+            font-size: 1.05em; /* 字体大小 */
+            margin-bottom: 2px; /* 底部外边距 */
+            color: var(--main-text); /* 文字颜色 */
+        }
+        /* 侧边栏等级样式 */
+        .sidebar .level {
+            text-align: center; /* 文本居中 */
+            margin-bottom: 8px; /* 底部外边距 */
+            color: var(--main-purple); /* 文字颜色 */
+            font-size: 0.98em; /* 字体大小 */
+        }
+        /* 侧边栏经验条背景样式 */
+        .sidebar .progress-bar-bg {
+            width: 90%; /* 宽度 */
+            height: 12px; /* 高度 */
+            background: var(--main-blue); /* 背景色 */
+            border-radius: 8px; /* 圆角 */
+            margin: 0 auto 4px auto; /* 水平居中，底部外边距 */
+            overflow: hidden; /* 隐藏超出部分 */
+        }
+        /* 侧边栏经验条实际进度样式 */
+        .sidebar .progress-bar {
+            height: 100%; /* 高度占满父元素 */
+            background: linear-gradient(90deg, var(--main-purple), var(--main-blue)); /* 渐变色 */
+            border-radius: 8px; /* 圆角 */
+            width: 80%; /* 初始进度，通过Vue动态绑定 */
+            transition: width 0.3s; /* 宽度变化的过渡动画 */
+        }
+        /* 侧边栏经验值文本样式 */
+        .sidebar .exp {
+            text-align: center; /* 文本居中 */
+            font-size: 0.93em; /* 字体大小 */
+            margin-bottom: 6px; /* 底部外边距 */
+            color: var(--main-text); /* 文字颜色 */
+        }
+        /* 侧边栏今日学习时长文本样式 */
+        .sidebar .today {
+            color: var(--main-purple); /* 文字颜色 */
+            text-align: center; /* 文本居中 */
+            margin-bottom: 10px; /* 底部外边距 */
+            font-size: 0.95em; /* 字体大小 */
+        }
+        /* 侧边栏分隔线样式 */
+        .sidebar hr {
+            width: 90%; /* 宽度 */
+            border: none; /* 无边框 */
+            border-top: 1px solid var(--main-border); /* 顶部实线边框 */
+            margin: 12px auto; /* 垂直居中，上下外边距 */
+        }
+        /* 侧边栏章节标题样式 */
+        .sidebar .section-title {
+            text-align: center; /* 文本居中 */
+            font-weight: bold; /* 粗体 */
+            margin-bottom: 6px; /* 底部外边距 */
+            color: var(--main-purple); /* 文字颜色 */
+            font-size: 1em; /* 字体大小 */
+        }
+        /* 侧边栏普通按钮样式 */
+        .sidebar .btn {
+            width: 92%; /* 宽度 */
+            padding: 8px 0; /* 垂直内边距 */
+            margin: 0 auto 8px auto; /* 水平居中，底部外边距 */
+            border: none; /* 无边框 */
+            border-radius: 8px; /* 圆角 */
+            background: var(--main-purple); /* 背景色 */
+            color: var(--main-bg); /* 文字颜色 */
+            font-weight: bold; /* 粗体 */
+            font-size: 1em; /* 字体大小 */
+            cursor: pointer; /* 鼠标指针样式 */
+            transition: background 0.2s; /* 背景色过渡动画 */
+            display: block; /* 块级元素 */
+        }
+        /* 侧边栏按钮悬停效果 */
+        .sidebar .btn:hover {
+            background: var(--main-blue); /* 悬停背景色 */
+            color: var(--main-text); /* 悬停文字颜色 */
+        }
+        /* 侧边栏次要按钮样式 */
+        .sidebar .btn.secondary {
+            background: var(--main-blue); /* 背景色 */
+            color: var(--main-purple); /* 文字颜色 */
+        }
+        /* 侧边栏通知/警示框样式 */
+        .sidebar .alert {
+            width: 92%; /* 宽度 */
+            margin: 0 auto 10px auto; /* 水平居中，底部外边距 */
+            background: var(--main-blue); /* 背景色 */
+            color: var(--main-text); /* 文字颜色 */
+            border-radius: 6px; /* 圆角 */
+            padding: 8px 10px; /* 内边距 */
+            font-size: 0.98em; /* 字体大小 */
+            display: flex; /* Flex布局 */
+            align-items: center; /* 垂直居中 */
+        }
+        /* 侧边栏通知/警示框伪元素（用于图标或装饰） */
+        .sidebar .alert::before {
+            content: ''; /* 空内容 */
+            margin-right: 5px; /* 右外边距 */
+        }
+        /* 新增：待办事项列表样式 */
+        .todo-input-group { /* 这个现在只作为占位符，实际输入已移到浮窗 */
+            display: flex;
+            margin: 10px auto 15px auto;
+            width: 92%;
+            gap: 8px;
+        }
+
+        .todo-input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--main-border);
+            border-radius: 8px;
+            font-size: 0.95em;
+            background: #f8fafc;
+            color: var(--main-text);
+            outline: none;
+        }
+
+        .todo-input-group .todo-add-btn {
+            width: auto;
+            padding: 8px 15px;
+            font-size: 0.95em;
+            border-radius: 8px;
+            background: var(--main-purple);
+            color: var(--main-bg);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .todo-input-group .todo-add-btn:hover {
+            background: var(--main-blue);
+            color: var(--main-purple);
+        }
+
+        /* 加号按钮样式 */
+        .add-todo-btn {
+            width: 92%; /* 宽度 */
+            padding: 8px 0; /* 垂直内边距 */
+            margin: 10px auto 8px auto; /* 水平居中，底部外边距 */
+            border: none; /* 无边框 */
+            border-radius: 8px; /* 圆角 */
+            background: var(--main-purple); /* 背景色 */
+            color: var(--main-bg); /* 文字颜色 */
+            font-weight: bold; /* 粗体 */
+            font-size: 1.5em; /* 字体大小，显示为加号 */
+            cursor: pointer; /* 鼠标指针样式 */
+            transition: background 0.2s, transform 0.1s; /* 背景色过渡动画 */
+            display: block; /* 块级元素 */
+            line-height: 1; /* 确保加号居中 */
+            text-align: center;
+        }
+        .add-todo-btn:hover {
+            background: var(--main-blue); /* 悬停背景色 */
+            color: var(--main-text); /* 悬停文字颜色 */
+            transform: scale(1.05);
+        }
+
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 auto;
+            width: 92%;
+        }
+
+        .todo-list li {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid var(--main-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            color: var(--main-text);
+            transition: background 0.2s;
+            cursor: pointer; /* 使整个li可点击 */
+        }
+
+        .todo-list li.completed {
+            background: #e6eaf0;
+            text-decoration: line-through;
+            color: var(--main-gray);
+        }
+
+        /* 隐藏原始复选框，使用自定义圆点 */
+        /* .todo-list li input[type="checkbox"] {
+            margin-right: 10px;
+            min-width: 16px;
+            min-height: 16px;
+            cursor: pointer;
+            accent-color: var(--main-purple);
+        } */
+
+        /* 自定义小圆点样式 */
+        .todo-circle {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--main-purple);
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0; /* 防止被挤压 */
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .todo-circle.completed {
+            background-color: var(--main-purple);
+            border-color: var(--main-purple);
+        }
+
+        .todo-circle.completed::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 8px;
+            height: 8px;
+            background-color: var(--main-bg); /* 完成后的白色内圆 */
+            border-radius: 50%;
+        }
+
+        .todo-list li .todo-text {
+            flex: 1;
+            word-break: break-word; /* 允许文本在单词内换行 */
+        }
+
+        .todo-list .no-todos-message {
+            text-align: center;
+            color: var(--main-gray);
+            padding: 10px 0; /* 减小垂直内边距 */
+            font-size: 0.85em; /* 减小字体大小 */
+            width: 100%; /* 减小宽度 */
+            margin: 10px auto; /* 水平居中 */
+        }
+        /* 主内容区域样式 */
+        .main {
+            flex: 1; /* 占据剩余可用空间 */
+            min-width: 0; /* 防止内容溢出，允许缩小 */
+        }
+        /* 主内容区标题样式 */
+        .main-title {
+            font-size: 1.25em; /* 字体大小 */
+            font-weight: bold; /* 粗体 */
+            color: var(--main-purple); /* 颜色 */
+            margin-bottom: 18px; /* 底部外边距 */
+            margin-top: 0; /* 顶部外边距 */
+            letter-spacing: 1px; /* 字符间距 */
+        }
+        /* 卡片列表容器样式 */
+        .card-list {
+            display: grid; /* 网格布局 */
+            grid-template-columns: repeat(2, 1fr); /* 两列，每列等宽 */
+            column-gap: 56px; /* 列间距 */
+            row-gap: 28px; /* 行间距 */
+            width: 100%; /* 宽度 */
+        }
+        /* 单个学习目标卡片样式 */
+        .card {
+            background: var(--main-bg); /* 背景色 */
+            border-radius: 14px; /* 圆角 */
+            box-shadow: 0 2px 8px rgba(107,78,255,0.07); /* 阴影 */
+            padding: 22px 20px 16px 20px; /* 内边距 */
+            width: 100%; /* 宽度 */
+            color: var(--main-text); /* 文字颜色 */
+            display: flex; /* Flex布局 */
+            flex-direction: column; /* 垂直排列 */
+            justify-content: space-between; /* 内容上下两端对齐 */
+            margin-bottom: 0; /* 底部外边距 */
+            position: relative; /* 相对定位，用于内部绝对定位元素 */
+            border: 1.5px solid var(--main-border); /* 边框 */
+            cursor: pointer; /* 添加指针样式，表明可点击 */
+            transition: transform 0.2s ease-in-out; /* 悬停动画 */
+        }
+        .card:hover {
+            transform: translateY(-5px); /* 悬停时向上轻微移动 */
+        }
+        /* 卡片标题样式 */
+        .card-title {
+            font-size: 1.7em; /* 字体大小 */
+            font-weight: bold; /* 粗体 */
+            color: var(--main-purple); /* 颜色 */
+            margin-bottom: 10px; /* 底部外边距 */
+            letter-spacing: 1px; /* 字符间距 */
+        }
+        /* 卡片进度条背景样式 */
+        .card-progress-bg {
+            width: 100%; /* 宽度 */
+            height: 14px; /* 高度 */
+            background: #fff; /* 背景色 */
+            border-radius: 8px; /* 圆角 */
+            margin-bottom: 8px; /* 底部外边距 */
+            overflow: hidden; /* 隐藏超出部分 */
+        }
+        /* 卡片进度条实际进度样式 */
+        .card-progress {
+            height: 100%; /* 高度占满父元素 */
+            background: linear-gradient(90deg, var(--main-purple), var(--main-blue)); /* 渐变色 */
+            border-radius: 8px; /* 圆角 */
+            width: 70%; /* 初始进度，通过Vue动态绑定 */
+            transition: width 0.3s; /* 宽度变化的过渡动画 */
+            box-shadow: 0 0 6px 1px #a3d8ff80; /* 轻微发光效果 */
+        }
+        /* 卡片标签区域样式 */
+        .card-tags {
+            margin: 8px 0 4px 0; /* 上下外边距 */
+        }
+        /* 单个卡片标签样式 */
+        .card-tag {
+            display: inline-block; /* 行内块级元素，使其可以并排显示并设置内外边距 */
+            background: var(--main-purple); /* 背景色 */
+            color: var(--main-bg); /* 文字颜色 */
+            border-radius: 8px; /* 圆角 */
+            padding: 2px 10px; /* 内边距 */
+            font-size: 0.98em; /* 字体大小 */
+            margin-right: 6px; /* 右外边距 */
+            margin-bottom: 2px; /* 底部外边距 */
+            font-weight: bold; /* 粗体 */
+        }
+        /* 卡片更新时间文本样式 */
+        .card-update {
+            color: var(--main-gray); /* 文字颜色 */
+            font-size: 0.98em; /* 字体大小 */
+            margin-bottom: 8px; /* 底部外边距 */
+        }
+        /* 卡片底部操作按钮区域样式 */
+        .card-footer {
+            display: flex; /* Flex布局 */
+            flex-direction: row; /* 水平排列 */
+            align-items: center; /* 垂直居中 */
+            gap: 16px; /* 子项间距 */
+            margin-top: 8px; /* 顶部外边距 */
+        }
+        /* 卡片底部图标按钮样式 */
+        .icon-btn {
+            background: none; /* 无背景 */
+            border: none; /* 无边框 */
+            cursor: pointer; /* 鼠标指针样式 */
+            font-size: 1.2em; /* 字体大小 */
+            color: var(--main-purple); /* 颜色 */
+            transition: transform 0.1s, color 0.2s; /* 变形和颜色过渡动画 */
+            padding: 0 4px; /* 左右内边距 */
+        }
+        /* 卡片底部图标按钮悬停效果 */
+        .icon-btn:hover {
+            transform: scale(1.18); /* 悬停时放大 */
+            color: var(--main-bg); /* 悬停文字颜色 */
+            background: var(--main-purple); /* 悬停背景色 */
+            border-radius: 50%; /* 圆角 */
+        }
+        /* 媒体查询：当屏幕宽度小于900px时，调整布局为单列 */
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column; /* 主内容区和侧边栏改为垂直排列 */
+                padding: 8px; /* 内边距 */
+            }
+            .sidebar {
+                width: 100%; /* 侧边栏宽度占满 */
+                margin-bottom: 16px; /* 底部外边距 */
+            }
+            .card-list {
+                grid-template-columns: 1fr; /* 卡片列表改为单列 */
+                row-gap: 18px; /* 行间距 */
+            }
+            .card {
+                width: 100%; /* 卡片宽度占满 */
+            }
+        }
+        /* 媒体查询：当屏幕宽度小于600px时，进一步调整布局和内边距 */
+        @media (max-width: 600px) {
+            .nav-header {
+                flex-direction: column; /* 导航栏改为垂直排列 */
+                height: auto; /* 高度自适应 */
+                padding: 8px; /* 内边距 */
+                gap: 8px; /* 子项间距 */
+            }
+            .container {
+                padding: 0; /* 移除内边距 */
+            }
+            .sidebar {
+                padding: 12px 6px; /* 调整内边距 */
+            }
+            .card {
+                padding: 14px 8px 10px 8px; /* 调整内边距 */
+            }
+        }
+        /* 新增的学习目标表单样式 */
+        .add-target-form {
+            margin-bottom: 20px;
+        }
+        .add-target-form h3 {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-actions {
+            text-align: right;
+        }
+        .form-actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--main-purple);
+            color: var(--main-bg);
+            cursor: pointer;
+        }
+        .form-actions button:hover {
+            background-color: var(--main-blue);
+        }
+        /* 新增：模态对话框的样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* 确保在其他内容之上 */
+        }
+
+        .modal-content {
+            background-color: var(--main-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* 新增：关闭按钮样式 */
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: var(--main-gray);
+            transition: color 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--main-text);
+        }
+
+        /* 调整表单标题和按钮的样式，使其更符合浮窗布局 */
+        .target-form .form-title {
+            font-size: 1.5em;
+            color: var(--main-purple);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .target-form .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .target-form .form-actions .btn {
+            width: auto; /* 让按钮宽度自适应内容 */
+            padding: 10px 20px;
+            margin: 0;
+        }
+
+        .target-form .form-group label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--main-text);
+        }
+
+        .target-form .form-group input {
+            background: #f8fafc;
+            border: 1px solid var(--main-border);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        /* 新增：待办事项浮窗样式 (复用modal-overlay和modal-content) */
+        .todo-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .todo-modal-content {
+            background-color: var(--main-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 400px; /* 待办浮窗可以小一点 */
+            position: relative;
+        }
+
+        .todo-form-title {
+            font-size: 1.5em;
+            color: var(--main-purple);
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .todo-form .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .todo-form .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--main-text);
+        }
+
+        .todo-form .form-group input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid var(--main-border);
+            border-radius: 8px;
+            font-size: 1em;
+            background: #f8fafc;
+            color: var(--main-text);
+        }
+
+        .todo-form .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .todo-form .form-actions .btn {
+            width: auto;
+            padding: 10px 20px;
+            margin: 0;
+        }
+
+        /* 新增：删除动画效果 */
+        .todo-list li.fade-out {
+            animation: fadeOutSlideUp 0.5s forwards; /* 0.5秒动画，保持最终状态 */
+        }
+
+        @keyframes fadeOutSlideUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+                height: auto;
+                margin-bottom: 8px;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-5px);
+                height: 0; /* 动画结束后高度变为0 */
+                margin-bottom: 0; /* 动画结束后外边距变为0 */
+                padding-top: 0;
+                padding-bottom: 0;
+                border: none; /* 移除边框 */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Vue 挂载点，整个页面的根容器 -->
+    <div id="app">
+        <!-- 顶部导航栏区域 -->
+        <div class="nav-header">
+            <div class="nav-logo">LevelUP</div> <!-- 左侧Logo文本 -->
+            <!-- 中间搜索框区域 -->
+            <div class="nav-search">
+                <!-- 搜索输入框，v-model绑定search数据，实现双向绑定 -->
+                <!-- @keyup.enter监听回车键事件，触发performSearch方法 -->
+                <input type="text" placeholder="搜索学习目标、技能点或笔记标题…" v-model="search" @keyup.enter="performSearch">
+            </div>
+            <!-- 右侧用户头像区域 -->
+            <!-- 这部分内容已移除，因为用户要求不需要头像图片 -->
+            <div class="nav-avatar">
+                <button class="btn" @click="attemptLogout">
+                    退出登录
+                </button>
+            </div>
+        </div>
+
+        <!-- 主体内容区域，包含侧边栏和主内容区 -->
+        <div class="container" v-if="isLoggedIn">
+            <!-- 左侧个人信息栏（侧边栏） -->
+            <div class="sidebar">
+                <h3>个人信息</h3>
+                <!-- 用户头像 -->
+                <img class="avatar" :src="user.avatar">
+                <!-- 用户名 -->
+                <div class="username">{{ loggedInUsername }}</div>
+                <!-- <div class="level">等级: {{ user.level }}</div> -->
+                <!-- <div class="progress-bar-bg">
+                    <div class="progress-bar" :style="{ width: userProgress + '%' }"></div>
+                </div> -->
+                <!-- <div class="exp">成长值: {{ user.exp }}/{{ user.next_level_exp }}</div> -->
+                <!-- <div class="today">今日学习时长: {{ user.today_study }}</div> -->
+                <hr> <!-- 分隔线 -->
+                <div class="section-title">快捷操作</div>
+                <!-- 快捷操作按钮 -->
+                <button class="btn" @click="openForm('add')">新建学习目标</button>
+                <button class="btn" @click="handleSidebarButtonClick('新建笔记')">新建笔记</button>
+                <button class="btn" @click="handleSidebarButtonClick('导入/导出')">导入/导出</button>
+                <hr> <!-- 分隔线 -->
+                <div class="section-title">待办事项</div>
+                <!-- 新的加号按钮 -->
+                <button class="btn add-todo-btn" @click="openTodoForm">+</button>
+
+                <!-- 待办事项列表 -->
+                <ul class="todo-list">
+                    <li v-for="(todo, index) in todos" :key="index" @click="toggleTodoComplete(todo)" :class="{ 'completed': todo.completed, 'fade-out': todo.isDeleting }">
+                        <span class="todo-circle" :class="{ 'completed': todo.completed }"></span> <!-- 小圆点 -->
+                        <span class="todo-text">{{ todo.text }}</span>
+                    </li>
+                    <li v-if="todos.length === 0" class="no-todos-message"> 暂无待办事项</li>
+                </ul>
+                <hr> <!-- 分隔线 -->
+                <div class="section-title">设置 / 帮助</div>
+                <!-- 设置/帮助按钮（次要样式） -->
+                <button class="btn secondary" @click="handleSidebarButtonClick('设置')">设置</button>
+                <button class="btn secondary" @click="handleSidebarButtonClick('帮助')">帮助</button>
+                <!-- 退出登录按钮已移到导航栏 -->
+            </div>
+
+            <!-- 右侧主内容区 -->
+            <div class="main">
+                <div class="main-title">学习目标</div>
+                <!-- 新建/编辑学习目标表单 - 现在是模态对话框内容 -->
+                <div class="modal-overlay" v-if="showForm">
+                    <div class="modal-content">
+                        <button class="modal-close-btn" @click="cancelForm">×</button>
+                        <div class="target-form">
+                            <h3 class="form-title">{{ formMode === 'add' ? '新建学习目标' : '编辑学习目标' }}</h3>
+                            <div class="form-group">
+                                <label for="formTitle">标题:</label>
+                                <input type="text" id="formTitle" v-model="currentFormTarget.title" placeholder="例如：算法与数据结构">
+                            </div>
+                            <div class="form-group">
+                                <label for="formTags">标签 (逗号分隔):</label>
+                                <input type="text" id="formTags" v-model="currentFormTarget.tags" placeholder="例如：算法, CS基础">
+                            </div>
+                            <div class="form-group">
+                                <label for="formProgress">进度 (0-1之间):</label>
+                                <input type="number" id="formProgress" v-model.number="currentFormTarget.progress" min="0" max="1" step="0.1">
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn" @click="saveForm">保存</button>
+                                <button class="btn secondary" @click="cancelForm">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新增：待办事项浮窗表单 -->
+                <div class="todo-modal-overlay" v-if="showTodoAddForm">
+                    <div class="todo-modal-content">
+                        <button class="modal-close-btn" @click="cancelAddTodoForm">×</button>
+                        <div class="todo-form">
+                            <h3 class="todo-form-title">添加待办事项</h3>
+                            <div class="form-group">
+                                <label for="todoText">事项内容:</label>
+                                <input type="text" id="todoText" v-model="newTodoText" @keyup.enter="addTodoFromForm" placeholder="例如：完成软件工程作业">
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn" @click="addTodoFromForm">添加</button>
+                                <button class="btn secondary" @click="cancelAddTodoForm">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学习目标卡片列表容器（两列布局） -->
+                <div class="card-list"> <!-- 当表单显示时不再隐藏卡片列表，因为表单是浮窗 -->
+                    <!-- 条件渲染：如果filteredTargets数组有内容则显示卡片，否则显示"未找到"提示 -->
+                    <template v-if="filteredTargets.length > 0">
+                        <div class="card" v-for="target in filteredTargets" :key="target.title" @click="viewTarget(target.title)">
+                            <div class="card-title" v-html="highlight(target.title)"></div>
+                            <div class="card-progress-bg">
+                                <div class="card-progress" :style="{ width: (target.progress * 100) + '%' }"></div>
+                            </div>
+                            <div class="card-tags">
+                                <span class="card-tag" v-for="tag in target.tags" :key="tag" v-html="highlight(tag)"></span>
+                            </div>
+                            <div class="card-update">🕒 最近更新: {{ target.update }}</div>
+                            <!-- 卡片底部操作按钮区域 -->
+                            <div class="card-footer">
+                                <button class="icon-btn" title="预览">👁️</button>
+                                <button class="icon-btn" title="编辑" @click.stop="openForm('edit', target)">✏️</button>
+                                <button class="icon-btn" title="收藏">⭐</button>
+                                <button class="icon-btn" title="删除" @click.stop="deleteTarget(target.title)">🗑️</button>
+                            </div>
+                        </div>
+                    </template>
+                    <!-- 如果没有匹配的学习目标，则显示此提示 -->
+                    <div v-else style="grid-column: 1 / -1; text-align:center; color:#aaa; font-size:1.1em; padding:40px 0;">
+                        未找到相关学习目标
+                    </div>
+                </div>
+            </div>
+        </div>  
+    </div>
+
+    <!-- Vue.js 脚本区域 -->
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    search: '',
+                    showForm: false,
+                    formMode: 'add',
+                    currentFormTarget: null,
+                    isLoggedIn: false,
+                    loggedInUsername: '',
+                    user: {
+                        avatar: 'https://static.streamlit.io/examples/cat.jpg',
+                    },
+                    targets: [],
+                    newTodoText: '',
+                    todos: [],
+                    showTodoAddForm: false,
+                }
+            },
+            mounted() {
+                // 检查登录状态
+                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                if (!currentUser) {
+                    window.location.href = 'signin_page.html';
+                    return;
+                }
+                
+                this.isLoggedIn = true;
+                this.loggedInUsername = currentUser.username;
+                
+                // 加载学习目标
+                this.targets = JSON.parse(localStorage.getItem('targets') || '[]');
+                
+                // 加载待办事项
+                const savedTodos = localStorage.getItem(`todos_${currentUser.username}`);
+                if (savedTodos) {
+                    this.todos = JSON.parse(savedTodos).map(todo => ({ ...todo, isDeleting: false }));
+                }
+            },
+            computed: {
+                filteredTargets() {
+                    if (!this.search) return this.targets;
+                    const s = this.search.trim().toLowerCase();
+                    return this.targets.filter(t =>
+                        t.title.toLowerCase().includes(s) ||
+                        t.tags.some(tag => tag.toLowerCase().includes(s))
+                    );
+                }
+            },
+            methods: {
+                highlight(text) {
+                    if (!this.search) return text;
+                    const s = this.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const reg = new RegExp(s, 'gi');
+                    return text.replace(reg, match => `<span style="background:#6b4eff;color:#fff;border-radius:4px;padding:0 2px;">${match}</span>`);
+                },
+                performSearch() {
+                    // 搜索功能已通过计算属性实现
+                },
+                viewTarget(title) {
+                    window.location.href = 'test_page.html?title=' + encodeURIComponent(title);
+                },
+                handleSidebarButtonClick(action) {
+                    window.location.href = 'test_page.html?action=' + encodeURIComponent(action);
+                },
+                openForm(mode, target = null) {
+                    this.formMode = mode;
+                    if (mode === 'add') {
+                        this.currentFormTarget = { title: '', tags: '', progress: 0 };
+                    } else if (mode === 'edit' && target) {
+                        this.currentFormTarget = { ...target, originalTitle: target.title, tags: target.tags.join(', ') };
+                    }
+                    this.showForm = true;
+                    document.body.style.overflow = 'hidden';
+                },
+                saveForm() {
+                    if (!this.currentFormTarget.title.trim()) {
+                        alert('标题不能为空！');
+                        return;
+                    }
+
+                    const today = new Date();
+                    const yyyy = today.getFullYear();
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+                    const processedTarget = {
+                        title: this.currentFormTarget.title.trim(),
+                        progress: parseFloat(this.currentFormTarget.progress) || 0,
+                        tags: this.currentFormTarget.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
+                        update: formattedDate,
+                    };
+
+                    if (this.formMode === 'add') {
+                        this.targets.push(processedTarget);
+                    } else {
+                        const index = this.targets.findIndex(t => t.title === this.currentFormTarget.originalTitle);
+                        if (index !== -1) {
+                            this.targets[index] = processedTarget;
+                        }
+                    }
+
+                    // 保存到localStorage
+                    localStorage.setItem('targets', JSON.stringify(this.targets));
+
+                    this.showForm = false;
+                    this.currentFormTarget = null;
+                    document.body.style.overflow = '';
+                },
+                cancelForm() {
+                    this.showForm = false;
+                    this.currentFormTarget = null;
+                    document.body.style.overflow = '';
+                },
+                deleteTarget(title) {
+                    if (!confirm(`确定要删除学习目标 "${title}" 吗？`)) {
+                        return;
+                    }
+                    
+                    const index = this.targets.findIndex(t => t.title === title);
+                    if (index !== -1) {
+                        this.targets.splice(index, 1);
+                        localStorage.setItem('targets', JSON.stringify(this.targets));
+                    }
+                },
+                attemptLogout() {
+                    if (confirm('确定要退出登录吗？')) {
+                        localStorage.removeItem('currentUser');
+                        window.location.href = 'signin_page.html';
+                    }
+                },
+                addTodoFromForm() {
+                    if (!this.newTodoText.trim()) {
+                        alert('待办事项不能为空！');
+                        return;
+                    }
+                    const newTodo = {
+                        text: this.newTodoText.trim(),
+                        completed: false,
+                        isDeleting: false
+                    };
+                    this.todos.push(newTodo);
+                    this.newTodoText = '';
+                    this.showTodoAddForm = false;
+                    
+                    // 保存到localStorage
+                    localStorage.setItem(`todos_${this.loggedInUsername}`, JSON.stringify(this.todos));
+                },
+                toggleTodoComplete(todo) {
+                    if (!todo.completed) {
+                        todo.completed = true;
+                        todo.isDeleting = true;
+                        setTimeout(() => {
+                            const index = this.todos.indexOf(todo);
+                            if (index !== -1) {
+                                this.todos.splice(index, 1);
+                                // 保存到localStorage
+                                localStorage.setItem(`todos_${this.loggedInUsername}`, JSON.stringify(this.todos));
+                            }
+                        }, 500);
+                    } else {
+                        todo.completed = false;
+                        todo.isDeleting = false;
+                        // 保存到localStorage
+                        localStorage.setItem(`todos_${this.loggedInUsername}`, JSON.stringify(this.todos));
+                    }
+                },
+                openTodoForm() {
+                    this.newTodoText = '';
+                    this.showTodoAddForm = true;
+                },
+                cancelAddTodoForm() {
+                    this.showTodoAddForm = false;
+                    this.newTodoText = '';
+                }
+            }
+        }).mount("#app");
+    </script>
+</body>
+</html>

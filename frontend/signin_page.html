@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>LevelUP - 登录/注册</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入 Google Fonts - Roboto 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --main-bg: #fff;
+            --main-text: #222;
+            --main-purple: #6b4eff;
+            --main-blue: #9cd6ff;
+            --main-border: #e6eaf0;
+            --main-gray: #888;
+        }
+        body {
+            font-family: 'Roboto', 'Segoe UI', sans-serif; /* 字体设置，优先使用 Roboto */
+            margin: 0;
+            background: linear-gradient(135deg, var(--main-purple) 0%, var(--main-blue) 100%); /* 渐变背景 */
+            color: var(--main-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* 确保占据整个视口高度 */
+        }
+        .login-container {
+            background-color: var(--main-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* 更深的阴影 */
+            width: 90%;
+            max-width: 450px; /* 略宽一点 */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-form-title {
+            font-size: 2.5em; /* 更大的标题 */
+            color: var(--main-purple);
+            margin-bottom: 30px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase; /* 大写 */
+        }
+        .login-form .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+            width: 100%; /* 确保输入框宽度一致 */
+        }
+        .login-form .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--main-text);
+        }
+        .login-form .form-group input {
+            width: calc(100% - 20px);
+            padding: 12px; /* 增大内边距 */
+            border: 1px solid var(--main-border);
+            border-radius: 8px;
+            font-size: 1.1em; /* 增大字体 */
+            background: #f8fafc;
+            color: var(--main-text);
+        }
+        .login-form .form-actions {
+            margin-top: 30px;
+            width: 100%;
+        }
+        .login-form .form-actions .btn {
+            width: 100%;
+            padding: 14px 0; /* 增大内边距 */
+            font-size: 1.2em; /* 增大字体 */
+            font-weight: bold;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--main-purple);
+            color: var(--main-bg);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .login-form .form-actions .btn:hover {
+            background-color: var(--main-blue);
+            transform: translateY(-2px); /* 悬停效果 */
+        }
+        .auth-toggle-link {
+            font-size: 1em; /* 增大字体 */
+            color: var(--main-purple);
+            cursor: pointer;
+            margin-top: 15px;
+            display: block;
+            text-decoration: none; /* 移除下划线 */
+            transition: color 0.2s;
+        }
+        .auth-toggle-link:hover {
+            color: var(--main-blue); /* 悬停颜色 */
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .login-container {
+                margin: 20px;
+                padding: 30px;
+            }
+            .login-form-title {
+                font-size: 2em;
+            }
+        }
+        .error-message {
+            color: #ff4444;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="login-container">
+            <h3 class="login-form-title">{{ isLogin ? '登录 LevelUP' : '注册新账号' }}</h3>
+            <!-- 登录表单 -->
+            <div class="login-form" v-if="isLogin">
+                <div class="form-group">
+                    <label for="username">用户名:</label>
+                    <input type="text" id="username" v-model="username" @keyup.enter="handleSubmit" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码:</label>
+                    <input type="password" id="password" v-model="password" @keyup.enter="handleSubmit" placeholder="请输入密码">
+                </div>
+                <div class="form-actions">
+                    <button class="btn" @click="handleSubmit">登录</button>
+                </div>
+                <a href="#" class="auth-toggle-link" @click.prevent="switchMode">没有账号？立即注册</a>
+                <div v-if="showError" class="error-message">{{ errorMessage }}</div>
+            </div>
+
+            <!-- 注册表单 -->
+            <div class="register-form" v-else>
+                <div class="form-group">
+                    <label for="username">用户名:</label>
+                    <input type="text" id="username" v-model="username" @keyup.enter="handleSubmit" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码:</label>
+                    <input type="password" id="password" v-model="password" @keyup.enter="handleSubmit" placeholder="请输入密码">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">确认密码:</label>
+                    <input type="password" id="confirmPassword" v-model="confirmPassword" @keyup.enter="handleSubmit" placeholder="请再次输入密码">
+                </div>
+                <div class="form-actions">
+                    <button class="btn" @click="handleSubmit">注册</button>
+                </div>
+                <a href="#" class="auth-toggle-link" @click.prevent="switchMode">已有账号？去登录</a>
+                <div v-if="showError" class="error-message">{{ errorMessage }}</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    isLogin: true,
+                    username: '',
+                    password: '',
+                    confirmPassword: '',
+                    errorMessage: '',
+                    showError: false
+                }
+            },
+            mounted() {
+                // 检查是否已登录
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    window.location.href = 'main_web.html';
+                }
+            },
+            methods: {
+                switchMode() {
+                    this.isLogin = !this.isLogin;
+                    this.username = '';
+                    this.password = '';
+                    this.confirmPassword = '';
+                    this.errorMessage = '';
+                    this.showError = false;
+                },
+                async handleSubmit() {
+                    // 清除之前的错误信息
+                    this.errorMessage = '';
+                    this.showError = false;
+
+                    // 验证输入
+                    if (!this.username.trim() || !this.password.trim()) {
+                        this.errorMessage = '用户名和密码不能为空！';
+                        this.showError = true;
+                        return;
+                    }
+
+                    if (!this.isLogin && this.password !== this.confirmPassword) {
+                        this.errorMessage = '两次输入的密码不一致！';
+                        this.showError = true;
+                        return;
+                    }
+
+                    try {
+                        if (this.isLogin) {
+                            // 登录逻辑
+                            const users = JSON.parse(localStorage.getItem('users') || '[]');
+                            const user = users.find(u => u.username === this.username);
+                            
+                            if (!user) {
+                                this.errorMessage = '用户名不存在！';
+                                this.showError = true;
+                                return;
+                            }
+
+                            // 验证密码（实际应用中应该使用加密）
+                            if (user.password !== this.password) {
+                                this.errorMessage = '密码错误！';
+                                this.showError = true;
+                                return;
+                            }
+
+                            // 登录成功，保存用户信息
+                            localStorage.setItem('currentUser', JSON.stringify({
+                                username: this.username
+                            }));
+
+                            // 跳转到主页
+                            window.location.href = 'main_web.html';
+                        } else {
+                            // 注册逻辑
+                            const users = JSON.parse(localStorage.getItem('users') || '[]');
+                            
+                            // 检查用户名是否已存在
+                            if (users.some(u => u.username === this.username)) {
+                                this.errorMessage = '用户名已存在！';
+                                this.showError = true;
+                                return;
+                            }
+
+                            // 添加新用户
+                            users.push({
+                                username: this.username,
+                                password: this.password // 实际应用中应该加密存储
+                            });
+
+                            // 保存用户列表
+                            localStorage.setItem('users', JSON.stringify(users));
+
+                            // 自动登录
+                            localStorage.setItem('currentUser', JSON.stringify({
+                                username: this.username
+                            }));
+
+                            // 跳转到主页
+                            window.location.href = 'main_web.html';
+                        }
+                    } catch (error) {
+                        console.error('操作失败:', error);
+                        this.errorMessage = '操作失败，请稍后重试！';
+                        this.showError = true;
+                    }
+                }
+            }
+        }).mount("#app");
+    </script>
+</body>
+</html>
