@@ -45,15 +45,16 @@
             letter-spacing: 2px;
         }
         .nav-search {
-            flex: 1;
+            position: relative;
+            width: 400px;
             display: flex;
             justify-content: center;
         }
         .nav-search input {
+            width: 100%;
             padding: 8px 16px;
             border-radius: 8px;
             border: none;
-            width: 400px;
             font-size: 1em;
             outline: none;
             background: #f8fafc;
@@ -66,19 +67,37 @@
             border: 2px solid var(--main-purple);
         }
         .btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
             background: var(--main-purple);
             color: var(--main-bg);
+            border: none;
+            border-radius: 8px;
             font-weight: bold;
             font-size: 1em;
+            padding: 10px 20px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, color 0.2s;
         }
         .btn:hover {
             background: var(--main-blue);
-            color: var(--main-text);
+            color: var(--main-purple);
+        }
+        .btn.secondary {
+            background: var(--main-blue);
+            color: var(--main-purple);
+            border: none;
+        }
+        .btn.secondary:hover {
+            background: var(--main-purple);
+            color: #fff;
+        }
+        .btn.cancel {
+            background: #e6eaf0 !important;
+            color: #555 !important;
+            border: none !important;
+        }
+        .btn.cancel:hover {
+            background: #cfd8dc !important;
+            color: #222 !important;
         }
         .back-btn {
             display: inline-block;
@@ -115,18 +134,20 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            min-height: 60px;
-            margin-bottom: clamp(24px, 4vh, 48px);
+            min-height: 64px;
+            margin-bottom: clamp(40px, 6vh, 64px);
         }
         .main-cell {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             width: 220px;
             min-width: 180px;
             max-width: 320px;
             margin-left: 60px;
             position: relative;
+            min-height: 64px;
         }
         .main-cell.empty {
             background: none;
@@ -136,6 +157,15 @@
             min-width: 180px;
             max-width: 320px;
             margin-left: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 24px;
+        }
+        .main-node, .branch-node {
+            max-width: 260px;
+            word-break: break-all;
+            white-space: normal;
         }
         .main-node {
             background: #6b4eff;
@@ -166,8 +196,8 @@
             overflow: visible;
         }
         .branch-connector {
-            width: 60px;
-            min-width: 40px;
+            width: 100px;
+            min-width: 80px;
             height: 2px;
             display: flex;
             align-items: center;
@@ -178,6 +208,7 @@
             flex-direction: row;
             align-items: center;
             min-width: 0;
+            min-height: 64px;
         }
         .branch-node {
             background: #fff;
@@ -877,14 +908,171 @@
             justify-content: flex-end;
             margin-top: 8px;
         }
+        .search-highlight {
+            background: #e6eaf0;
+            color: #6b4eff;
+            border-radius: 4px;
+            font-weight: bold;
+            padding: 0 2px;
+            box-shadow: 0 1px 4px rgba(107,78,255,0.03);
+        }
+        .search-dropdown {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            top: 100%;
+            background: #fff;
+            border: 1.5px solid #e6eaf0;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(107,78,255,0.08);
+            z-index: 2147483647;
+            max-height: 144px; /* 4项，每项36px */
+            min-height: 144px;
+            overflow-y: auto;
+        }
+        .search-dropdown-item {
+            padding: 7px 14px;
+            min-height: 36px;
+            cursor: pointer;
+            font-size: 1em;
+            color: #222;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .search-dropdown-item.active, .search-dropdown-item:hover {
+            background: #f0f2f5;
+            color: #6b4eff;
+        }
+        .search-dropdown-item.no-result {
+            min-height: 56px;
+            justify-content: center;
+            color: #aaa;
+            cursor: default;
+        }
+        .dropdown-branch {
+            padding-left: 52px;
+        }
+        .dropdown-status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+            background: #b0b8c9;
+        }
+        .dropdown-status-dot.status-todo { background: #b0b8c9; }
+        .dropdown-status-dot.status-doing { background: #ffb300; }
+        .dropdown-status-dot.status-done { background: #52c41a; }
+        .search-locate-highlight {
+            box-shadow: 0 0 0 4px #9cd6ff, 0 2px 8px rgba(107,78,255,0.10);
+            transition: box-shadow 0.2s;
+            z-index: 20000;
+        }
+        .search-dropdown.no-scroll {
+            overflow-y: visible !important;
+            max-height: none !important;
+        }
+        .todo-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .todo-modal-content {
+            background-color: var(--main-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+        .todo-form-title {
+            font-size: 2em;
+            color: var(--main-purple);
+            margin-bottom: 24px;
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .todo-form .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .todo-form .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--main-text);
+        }
+        .todo-form .form-group input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid var(--main-border);
+            border-radius: 8px;
+            font-size: 1em;
+            background: #f8fafc;
+            color: var(--main-text);
+        }
+        .todo-form .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .todo-form .form-actions .btn {
+            width: auto;
+            padding: 10px 20px;
+            margin: 0;
+        }
+        .btn.cancel {
+            background: #e6eaf0 !important;
+            color: #555 !important;
+            border: none !important;
+        }
+        .btn.cancel:hover {
+            background: #cfd8dc !important;
+            color: #222 !important;
+        }
     </style>
 </head>
 <body>
 <div id="app">
     <div class="nav-header">
         <div class="nav-logo">LevelUP</div>
-        <div class="nav-search">
-            <input type="text" placeholder="搜索学习目标、技能点或笔记标题…">
+        <div class="nav-search" style="position:relative;">
+            <input type="text" placeholder="搜索学习目标、技能点或笔记标题…"
+                   v-model="search"
+                   @focus="onSearchFocus"
+                   @blur="onSearchBlur"
+                   @keydown="onSearchKeydown"
+                   ref="searchInputRef">
+            <div v-if="showDropdown"
+                 class="search-dropdown"
+                 :class="{'no-scroll': dropdownOptions.length === 0 && search.trim() !== ''}"
+                 :style="dropdownOptions.length ? {maxHeight: '144px'} : {minHeight: dropdownHeight}">
+                <template v-if="dropdownOptions.length">
+                    <template v-for="(opt, i) in dropdownOptions" :key="opt.type + '-' + opt.id">
+                        <div :class="['search-dropdown-item', {active: i === dropdownIndex, 'dropdown-branch': opt.type==='branch'}]"
+                             @mousedown.prevent="locateNode(opt)">
+                            <span class="dropdown-status-dot" :class="'status-' + opt.status"></span>
+                            <span v-html="highlight(opt.label)"></span>
+                        </div>
+                    </template>
+                </template>
+                <div v-else-if="search.trim() !== ''" class="search-dropdown-item no-result">
+                    未找到相关技能点
+                </div>
+            </div>
         </div>
         <div class="nav-avatar">
             <a href="main_web.html" class="btn" style="text-decoration:none;">返回主页</a>
@@ -915,27 +1103,77 @@
                     </div>
                 </div>
                 <hr>
-                <div class="section-title">快捷操作</div>
-                <button class="btn" @click="jumpTo('新建学习目标')">新建学习目标</button>
-                <button class="btn" @click="jumpTo('新建笔记')">新建笔记</button>
-                <button class="btn" @click="jumpTo('导入/导出')">导入/导出</button>
-                <hr>
                 <div class="section-title">待办事项</div>
-                <button class="btn add-todo-btn" @click="addTodo">+</button>
+                <button class="btn add-todo-btn" @click="openTodoForm">+</button>
                 <ul class="todo-list">
-                    <li v-for="(todo, idx) in todos" :key="idx">{{ todo.text }}</li>
+                    <li v-for="(todo, idx) in todos" :key="todo.id" @click="toggleTodoComplete(todo)" :class="{ 'completed': todo.completed, 'fade-out': todo.isDeleting }">
+                        <span class="todo-circle" :class="{ 'completed': todo.completed }"></span>
+                        <span class="todo-text">{{ todo.text }}</span>
+                        <button class="icon-btn" title="删除" @click.stop="deleteTodo(todo)">🗑️</button>
+                    </li>
                     <li v-if="todos.length === 0" class="no-todos-message">暂无待办事项</li>
                 </ul>
+                <!-- 新增：待办事项浮窗表单 -->
+                <div class="todo-modal-overlay" v-if="showTodoAddForm">
+                    <div class="todo-modal-content">
+                        <button class="modal-close-btn" @click="cancelAddTodoForm">×</button>
+                        <div class="todo-form">
+                            <h3 class="todo-form-title">添加待办事项</h3>
+                            <div class="form-group">
+                                <label for="todoText">事项内容:</label>
+                                <input type="text" id="todoText" v-model="newTodoText" @keyup.enter="addTodoFromForm" placeholder="例如：完成软件工程作业">
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn" @click="addTodoFromForm">添加</button>
+                                <button class="btn cancel" @click="cancelAddTodoForm">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <hr>
                 <div class="section-title">设置 / 帮助</div>
                 <button class="btn secondary" @click="jumpTo('设置')">设置</button>
                 <button class="btn secondary" @click="jumpTo('帮助')">帮助</button>
+                <!-- 新增：主技能点插入弹窗 -->
+                <div class="todo-modal-overlay" v-if="showAddMainNodeModal">
+                    <div class="todo-modal-content">
+                        <button class="modal-close-btn" @click="cancelAddMainNodeModal">×</button>
+                        <div class="todo-form">
+                            <h3 class="todo-form-title">添加主技能点</h3>
+                            <div class="form-group">
+                                <label for="mainNodeTitle">技能点标题:</label>
+                                <input type="text" id="mainNodeTitle" v-model="newMainNodeTitle" @keyup.enter="addMainNodeFromModal" placeholder="例如：数据结构基础">
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn" @click="addMainNodeFromModal">添加</button>
+                                <button class="btn cancel" @click="cancelAddMainNodeModal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 新增：分支技能点插入弹窗 -->
+                <div class="todo-modal-overlay" v-if="showAddBranchNodeModal">
+                    <div class="todo-modal-content">
+                        <button class="modal-close-btn" @click="cancelAddBranchNodeModal">×</button>
+                        <div class="todo-form">
+                            <h3 class="todo-form-title">添加分支技能点</h3>
+                            <div class="form-group">
+                                <label for="branchNodeTitle">技能点标题:</label>
+                                <input type="text" id="branchNodeTitle" v-model="newBranchNodeTitle" @keyup.enter="addBranchNodeFromModal" placeholder="例如：链表与数组">
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn" @click="addBranchNodeFromModal">添加</button>
+                                <button class="btn cancel" @click="cancelAddBranchNodeModal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="main-content" style="flex:1; min-width:0;">
                 <div class="title">{{ targetId }}</div>
         <div class="subtitle">学习路径（Roadmap）</div>
                 <div class="roadmap-list" ref="roadmapListRef">
-                    <template v-for="(node, idx) in data" :key="node.id">
+                    <template v-for="(node, idx) in filteredRoadmap" :key="node.id">
                         <!-- 主技能点行 -->
                         <div class="roadmap-row">
                             <div class="main-cell">
@@ -943,9 +1181,8 @@
                                      :class="'status-' + node.status"
                                      :data-id="node.id"
                                      @contextmenu="showMenu($event, 'main', idx, -1)"
-                                     @click="handleNodeClick(node.id, 'main', idx, -1)">
-                                    {{ node.title }}
-                                </div>
+                                     @click="handleNodeClick(node.id, 'main', idx, -1)"
+                                     v-html="highlight(node.title)"></div>
                             </div>
                             <div class="branch-connector"></div>
                             <div class="branch-cell">
@@ -955,9 +1192,8 @@
                                      :data-id="node.children[0].id"
                                      :data-main-id="node.id"
                                      @contextmenu="showMenu($event, 'branch', idx, 0)"
-                                     @click="handleNodeClick(node.children[0].id, 'branch', idx, 0)">
-                                    {{ node.children[0].title }}
-                                </div>
+                                     @click="handleNodeClick(node.children[0].id, 'branch', idx, 0)"
+                                     v-html="highlight(node.children[0].title)"></div>
                             </div>
                         </div>
                         <!-- 其余分支技能点单独一行 -->
@@ -971,9 +1207,8 @@
                                          :data-id="branch.id"
                                          :data-main-id="node.id"
                                          @contextmenu="showMenu($event, 'branch', idx, cidx+1)"
-                                         @click="handleNodeClick(branch.id, 'branch', idx, cidx+1)">
-                                        {{ branch.title }}
-                                    </div>
+                                         @click="handleNodeClick(branch.id, 'branch', idx, cidx+1)"
+                                         v-html="highlight(branch.title)"></div>
                                 </div>
                             </div>
                         </template>
@@ -1129,15 +1364,78 @@ createApp({
         const branchProgressPercent = computed(() => branchCount.value ? Math.round(branchStatus.value.done/branchCount.value*100) : 0);
         // 待办事项
         const todos = ref([]);
-        // 跳转
-        function jumpTo(action) {
-            window.location.href = 'test_page.html?action=' + encodeURIComponent(action);
-        }
-        function addTodo() {
-            const text = prompt('请输入待办事项内容');
-            if (text && text.trim()) {
-                todos.value.push({text: text.trim()});
+        const newTodoText = ref('');
+        const showTodoAddForm = ref(false);
+        async function fetchTodos() {
+            const res = await fetch(`${API_BASE}/todos`, { credentials: 'include' });
+            if (res.ok) {
+                const result = await res.json();
+                if (result.success) {
+                    todos.value = result.data.map(todo => ({ ...todo, isDeleting: false }));
+                } else {
+                    todos.value = [];
+                }
+            } else {
+                todos.value = [];
             }
+        }
+        async function addTodoApi(text) {
+            await fetch(`${API_BASE}/todos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ text })
+            });
+            newTodoText.value = '';
+            showTodoAddForm.value = false;
+            await fetchTodos();
+        }
+        function openTodoForm() {
+            newTodoText.value = '';
+            showTodoAddForm.value = true;
+            document.body.style.overflow = 'hidden';
+        }
+        function cancelAddTodoForm() {
+            showTodoAddForm.value = false;
+            newTodoText.value = '';
+            document.body.style.overflow = '';
+        }
+        async function addTodoFromForm() {
+            if (!newTodoText.value.trim()) {
+                alert('待办事项不能为空！');
+                return;
+            }
+            await addTodoApi(newTodoText.value.trim());
+            document.body.style.overflow = '';
+        }
+        async function toggleTodoComplete(todo) {
+            if (!todo.completed) {
+                await fetch(`${API_BASE}/todos/${todo.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ completed: true })
+                });
+                todo.isDeleting = true;
+                setTimeout(async () => {
+                    await fetchTodos();
+                }, 500);
+            } else {
+                await fetch(`${API_BASE}/todos/${todo.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ completed: false })
+                });
+                await fetchTodos();
+            }
+        }
+        async function deleteTodo(todo) {
+            await fetch(`${API_BASE}/todos/${todo.id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            await fetchTodos();
         }
         // roadmap API
         async function loadRoadmap() {
@@ -1180,18 +1478,12 @@ createApp({
         }
         // 技能点操作
         async function insertDown(idx) {
-            const label = prompt('请输入新技能点内容：');
-            if (label && label.trim()) {
-                await addMainNode(label.trim());
-            }
+            openAddMainNodeModal(idx);
             hideMenu();
         }
         async function insertRight(idx) {
-            const label = prompt('请输入分支技能点内容：');
-            if (label && label.trim()) {
-                const mainId = data.value[idx].id;
-                await addBranchNode(mainId, label.trim());
-            }
+            const mainId = data.value[idx].id;
+            openAddBranchNodeModal(mainId);
             hideMenu();
         }
         async function editNode(idx, cidx) {
@@ -1278,7 +1570,8 @@ createApp({
                 const x = fromRect.left + fromRect.width / 2 - containerRect.left;
                 const y1 = fromRect.bottom - containerRect.top;
                 const y2 = toRect.top - containerRect.top;
-                const height = y2 - y1;
+                const markerSize = 8;
+                const height = y2 - y1 + markerSize;
                 const width = 32;
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                 svg.classList.add('main-arrow-abs');
@@ -1289,7 +1582,8 @@ createApp({
                 svg.style.overflow = 'visible';
                 svg.setAttribute('width', width);
                 svg.setAttribute('height', height);
-                svg.innerHTML = `<defs><marker id='arrowhead' markerWidth='8' markerHeight='8' refX='4' refY='4' orient='auto' markerUnits='strokeWidth'><path d='M0,0 L8,4 L0,8 Z' fill='#9cd6ff'/></marker></defs><line x1='${width/2}' y1='0' x2='${width/2}' y2='${height}' stroke='#9cd6ff' stroke-width='3' marker-end='url(#arrowhead)'/>`;
+                const lineEndY = height - 1 - markerSize * 2;
+                svg.innerHTML = `<defs><marker id='arrowhead' markerWidth='8' markerHeight='8' refX='4' refY='4' orient='auto' markerUnits='strokeWidth'><path d='M0,0 L8,4 L0,8 Z' fill='#9cd6ff'/></marker></defs><line x1='${width/2}' y1='0' x2='${width/2}' y2='${lineEndY}' stroke='#9cd6ff' stroke-width='3' marker-end='url(#arrowhead)'/>`;
                 list.appendChild(svg);
             }
             // 分支虚线
@@ -1301,21 +1595,25 @@ createApp({
                 const mainRect = main.getBoundingClientRect();
                 const branchRect = branch.getBoundingClientRect();
                 const containerRect = list.getBoundingClientRect();
+                // 逻辑修正：始终以主节点右侧中心为起点，分支节点左侧中心为终点
                 const x1 = mainRect.right - containerRect.left;
-                const y = mainRect.top + mainRect.height/2 - containerRect.top;
+                const y1 = mainRect.top + mainRect.height/2 - containerRect.top;
                 const x2 = branchRect.left - containerRect.left;
+                const y2 = branchRect.top + branchRect.height/2 - containerRect.top;
                 const width = x2 - x1;
-                if (width < 10) return;
+                const height = y2 - y1;
+                if (width < 10 && Math.abs(height) < 10) return;
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                 svg.classList.add('branch-dash-abs');
                 svg.style.left = x1 + 'px';
-                svg.style.top = (y - 1) + 'px';
+                svg.style.top = (y1) + 'px';
                 svg.style.width = width + 'px';
-                svg.style.height = '2px';
+                svg.style.height = Math.abs(height) + 'px';
                 svg.style.overflow = 'visible';
                 svg.setAttribute('width', width);
-                svg.setAttribute('height', 2);
-                svg.innerHTML = `<line x1='0' y1='1' x2='${width}' y2='1' stroke='#9cd6ff' stroke-width='2' stroke-dasharray='6,6'/>`;
+                svg.setAttribute('height', Math.abs(height));
+                // 只画水平虚线（如需斜线可用 line x1/y1/x2/y2）
+                svg.innerHTML = `<line x1='0' y1='${height >= 0 ? 0 : Math.abs(height)}' x2='${width}' y2='${height >= 0 ? height : 0}' stroke='#9cd6ff' stroke-width='2' stroke-dasharray='6,6'/>`;
                 list.appendChild(svg);
             });
         }
@@ -1332,6 +1630,7 @@ createApp({
         onMounted(() => {
             nextTick(robustDrawArrows);
             loadRoadmap();
+            fetchTodos();
             window.addEventListener('resize', robustDrawArrows);
         });
         onUnmounted(() => {
@@ -1546,12 +1845,173 @@ createApp({
         window._mdFiles = mdFiles;
         window._appData = { mdFiles, data, nodeDetail };
         // === END ===
+        // 搜索相关
+        const search = ref('');
+        // 搜索过滤后的 roadmap
+        const filteredRoadmap = computed(() => data.value);
+        // 高亮函数（优化样式）
+        function highlight(text) {
+            if (!search.value.trim()) return text;
+            const s = search.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const reg = new RegExp(s, 'gi');
+            return text.replace(reg, match => `<span class='search-highlight'>${match}</span>`);
+        }
+        // 搜索下拉联想相关
+        const showDropdown = ref(false);
+        const dropdownOptions = computed(() => {
+            const s = search.value.trim().toLowerCase();
+            const options = [];
+            data.value.forEach(main => {
+                // 主节点
+                options.push({
+                    id: main.id,
+                    type: 'main',
+                    label: main.title,
+                    status: main.status,
+                    parentId: null
+                });
+                // 分节点
+                (main.children || []).forEach(child => {
+                    options.push({
+                        id: child.id,
+                        type: 'branch',
+                        label: child.title,
+                        status: child.status,
+                        parentId: main.id
+                    });
+                });
+            });
+            // 有搜索内容时才过滤
+            if (s) {
+                const filtered = [];
+                data.value.forEach(main => {
+                    let mainMatch = main.title.toLowerCase().includes(s);
+                    let branchMatches = (main.children || []).filter(child => child.title.toLowerCase().includes(s));
+                    if (mainMatch || branchMatches.length > 0) {
+                        filtered.push({
+                            id: main.id,
+                            type: 'main',
+                            label: main.title,
+                            status: main.status,
+                            parentId: null
+                        });
+                        branchMatches.forEach(child => {
+                            filtered.push({
+                                id: child.id,
+                                type: 'branch',
+                                label: child.title,
+                                status: child.status,
+                                parentId: main.id
+                            });
+                        });
+                    }
+                });
+                return filtered;
+            }
+            return options;
+        });
+        // 定位并高亮节点
+        function locateNode(option) {
+            let selector = '';
+            if (option.type === 'main') {
+                selector = `.main-node[data-id='${option.id}']`;
+            } else {
+                selector = `.branch-node[data-id='${option.id}']`;
+            }
+            const el = document.querySelector(selector);
+            if (el) {
+                el.scrollIntoView({behavior: 'smooth', block: 'center'});
+                el.classList.add('search-locate-highlight');
+                setTimeout(() => {
+                    el.classList.remove('search-locate-highlight');
+                }, 1800);
+            }
+            showDropdown.value = false;
+        }
+        // 监听输入聚焦/失焦
+        function onSearchFocus() { showDropdown.value = true; }
+        function onSearchBlur() { setTimeout(() => { showDropdown.value = false; }, 200); }
+        // 键盘上下选择
+        const dropdownIndex = ref(-1);
+        function onSearchKeydown(e) {
+            if (!showDropdown.value || !dropdownOptions.value.length) return;
+            if (e.key === 'ArrowDown') {
+                dropdownIndex.value = (dropdownIndex.value + 1) % dropdownOptions.value.length;
+                e.preventDefault();
+            } else if (e.key === 'ArrowUp') {
+                dropdownIndex.value = (dropdownIndex.value - 1 + dropdownOptions.value.length) % dropdownOptions.value.length;
+                e.preventDefault();
+            } else if (e.key === 'Enter') {
+                if (dropdownIndex.value >= 0 && dropdownIndex.value < dropdownOptions.value.length) {
+                    locateNode(dropdownOptions.value[dropdownIndex.value]);
+                }
+            }
+        }
+        // 计算下拉框高度：有选项时为min(4,选项数)*36px，无选项时为56px
+        const dropdownHeight = computed(() => {
+            const count = dropdownOptions.value.length;
+            const h = count > 0 ? Math.min(count, 4) * 36 : 56;
+            return h + 'px';
+        });
+        // setup() 内部新增变量和方法
+        const showAddMainNodeModal = ref(false);
+        const newMainNodeTitle = ref('');
+        let addMainNodeInsertIdx = null;
+        function openAddMainNodeModal(idx) {
+            addMainNodeInsertIdx = idx;
+            newMainNodeTitle.value = '';
+            showAddMainNodeModal.value = true;
+            document.body.style.overflow = 'hidden';
+        }
+        function cancelAddMainNodeModal() {
+            showAddMainNodeModal.value = false;
+            newMainNodeTitle.value = '';
+            document.body.style.overflow = '';
+        }
+        async function addMainNodeFromModal() {
+            if (!newMainNodeTitle.value.trim()) {
+                alert('技能点标题不能为空！');
+                return;
+            }
+            await addMainNode(newMainNodeTitle.value.trim());
+            showAddMainNodeModal.value = false;
+            newMainNodeTitle.value = '';
+            document.body.style.overflow = '';
+        }
+        // setup() 内部新增变量和方法
+        const showAddBranchNodeModal = ref(false);
+        const newBranchNodeTitle = ref('');
+        let addBranchNodeMainId = null;
+        function openAddBranchNodeModal(mainId) {
+            addBranchNodeMainId = mainId;
+            newBranchNodeTitle.value = '';
+            showAddBranchNodeModal.value = true;
+            document.body.style.overflow = 'hidden';
+        }
+        function cancelAddBranchNodeModal() {
+            showAddBranchNodeModal.value = false;
+            newBranchNodeTitle.value = '';
+            document.body.style.overflow = '';
+        }
+        async function addBranchNodeFromModal() {
+            if (!newBranchNodeTitle.value.trim()) {
+                alert('技能点标题不能为空！');
+                return;
+            }
+            await addBranchNode(addBranchNodeMainId, newBranchNodeTitle.value.trim());
+            showAddBranchNodeModal.value = false;
+            newBranchNodeTitle.value = '';
+            document.body.style.overflow = '';
+        }
         return {
-            targetId, data, mainCount, branchCount, mainStatus, branchStatus, branchProgressPercent, todos, jumpTo, addTodo,
+            targetId, data, mainCount, branchCount, mainStatus, branchStatus, branchProgressPercent, todos, newTodoText, showTodoAddForm, fetchTodos, addTodoApi, openTodoForm, cancelAddTodoForm, addTodoFromForm, toggleTodoComplete, deleteTodo,
             contextMenu, showMenu, hideMenu, insertDown, insertRight, editNode, deleteNode, setStatus, dblJump, roadmapListRef,
             statusSubMenu, showStatusSubMenu, hideStatusSubMenu, nodeDetail, openNodeDetail, closeNodeDetail, saveNodeRemark,
             editMode, editCache, startEditNodeDetail, cancelNodeEdit, saveNodeEdit, handleNodeClick, mdFiles, loadMdFilesForNode,
-            openMdFile
+            openMdFile, search, filteredRoadmap, highlight,
+            showDropdown, dropdownOptions, locateNode, onSearchFocus, onSearchBlur, dropdownIndex, onSearchKeydown,
+            dropdownHeight, showAddMainNodeModal, newMainNodeTitle, openAddMainNodeModal, cancelAddMainNodeModal, addMainNodeFromModal,
+            showAddBranchNodeModal, newBranchNodeTitle, openAddBranchNodeModal, cancelAddBranchNodeModal, addBranchNodeFromModal
         };
     }
 }).mount('#app');

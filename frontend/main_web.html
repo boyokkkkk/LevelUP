@@ -764,6 +764,7 @@
                     <li v-for="(todo, index) in todos" :key="index" @click="toggleTodoComplete(todo)" :class="{ 'completed': todo.completed, 'fade-out': todo.isDeleting }">
                         <span class="todo-circle" :class="{ 'completed': todo.completed }"></span> <!-- 小圆点 -->
                         <span class="todo-text">{{ todo.text }}</span>
+                        <button class="icon-btn" title="删除" @click.stop="deleteTodo(todo)">🗑️</button>
                     </li>
                     <li v-if="todos.length === 0" class="no-todos-message"> 暂无待办事项</li>
                 </ul>
@@ -885,10 +886,7 @@
                 this.loggedInUsername = currentUser.username;
                 this.fetchTargets();
                 // 加载待办事项
-                const savedTodos = localStorage.getItem(`todos_${currentUser.username}`);
-                if (savedTodos) {
-                    this.todos = JSON.parse(savedTodos).map(todo => ({ ...todo, isDeleting: false }));
-                }
+                this.fetchTodos();
             },
             computed: {
                 filteredTargets() {
@@ -911,6 +909,19 @@
                         }));
                     } else {
                         this.targets = [];
+                    }
+                },
+                async fetchTodos() {
+                    const res = await fetch('http://localhost:5000/todos', { credentials: 'include' });
+                    if (res.ok) {
+                        const result = await res.json();
+                        if (result.success) {
+                            this.todos = result.data.map(todo => ({ ...todo, isDeleting: false }));
+                        } else {
+                            this.todos = [];
+                        }
+                    } else {
+                        this.todos = [];
                     }
                 },
                 highlight(text) {
@@ -997,36 +1008,47 @@
                         alert('待办事项不能为空！');
                         return;
                     }
-                    const newTodo = {
-                        text: this.newTodoText.trim(),
-                        completed: false,
-                        isDeleting: false
-                    };
-                    this.todos.push(newTodo);
+                    this.addTodoApi(this.newTodoText.trim());
+                },
+                async addTodoApi(text) {
+                    await fetch('http://localhost:5000/todos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ text })
+                    });
                     this.newTodoText = '';
                     this.showTodoAddForm = false;
-                    
-                    // 保存到localStorage
-                    localStorage.setItem(`todos_${this.loggedInUsername}`, JSON.stringify(this.todos));
+                    await this.fetchTodos();
                 },
-                toggleTodoComplete(todo) {
+                async toggleTodoComplete(todo) {
                     if (!todo.completed) {
-                        todo.completed = true;
+                        await fetch(`http://localhost:5000/todos/${todo.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ completed: true })
+                        });
                         todo.isDeleting = true;
-                        setTimeout(() => {
-                            const index = this.todos.indexOf(todo);
-                            if (index !== -1) {
-                                this.todos.splice(index, 1);
-                                // 保存到localStorage
-                                localStorage.setItem(`todos_${this.loggedInUsername}`, JSON.stringify(this.todos));
-                            }
+                        setTimeout(async () => {
+                            await this.fetchTodos();
                         }, 500);
                     } else {
-                        todo.completed = false;
-                        todo.isDeleting = false;
-                        // 保存到localStorage
-                        localStorage.setItem(`todos_${this.loggedInUsername}`, JSON.stringify(this.todos));
+                        await fetch(`http://localhost:5000/todos/${todo.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ completed: false })
+                        });
+                        await this.fetchTodos();
                     }
+                },
+                async deleteTodo(todo) {
+                    await fetch(`http://localhost:5000/todos/${todo.id}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    await this.fetchTodos();
                 },
                 openTodoForm() {
                     this.newTodoText = '';
