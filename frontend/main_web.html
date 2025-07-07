@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <title>LevelUP - 个性化知识成长系统</title>
     <!-- 引入 Vue 3 CDN，用于构建交互式前端界面 -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- 引入 Google Fonts - Roboto 字体 -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
@@ -785,8 +785,8 @@
                         <div class="target-form">
                             <h3 class="form-title">{{ formMode === 'add' ? '新建学习目标' : '编辑学习目标' }}</h3>
                             <div class="form-group">
-                                <label for="formTitle">标题:</label>
-                                <input type="text" id="formTitle" v-model="currentFormTarget.title" placeholder="例如：算法与数据结构">
+                                <label for="formTargetId">目标名:</label>
+                                <input type="text" id="formTargetId" v-model="currentFormTarget.target_id" placeholder="例如：算法与数据结构">
                             </div>
                             <div class="form-group">
                                 <label for="formTags">标签 (逗号分隔):</label>
@@ -826,7 +826,7 @@
                 <div class="card-list"> <!-- 当表单显示时不再隐藏卡片列表，因为表单是浮窗 -->
                     <!-- 条件渲染：如果filteredTargets数组有内容则显示卡片，否则显示"未找到"提示 -->
                     <template v-if="filteredTargets.length > 0">
-                        <div class="card" v-for="target in filteredTargets" :key="target.title" @click="viewTarget(target.title)">
+                        <div class="card" v-for="target in filteredTargets" :key="target.id" @click="viewTarget(target.title)">
                             <div class="card-title" v-html="highlight(target.title)"></div>
                             <div class="card-progress-bg">
                                 <div class="card-progress" :style="{ width: (target.progress * 100) + '%' }"></div>
@@ -840,7 +840,7 @@
                                 <button class="icon-btn" title="预览">👁️</button>
                                 <button class="icon-btn" title="编辑" @click.stop="openForm('edit', target)">✏️</button>
                                 <button class="icon-btn" title="收藏">⭐</button>
-                                <button class="icon-btn" title="删除" @click.stop="deleteTarget(target.title)">🗑️</button>
+                                <button class="icon-btn" title="删除" @click.stop="deleteTarget(target.id)">🗑️</button>
                             </div>
                         </div>
                     </template>
@@ -881,13 +881,9 @@
                     window.location.href = 'signin_page.html';
                     return;
                 }
-                
                 this.isLoggedIn = true;
                 this.loggedInUsername = currentUser.username;
-                
-                // 加载学习目标
-                this.targets = JSON.parse(localStorage.getItem('targets') || '[]');
-                
+                this.fetchTargets();
                 // 加载待办事项
                 const savedTodos = localStorage.getItem(`todos_${currentUser.username}`);
                 if (savedTodos) {
@@ -905,17 +901,29 @@
                 }
             },
             methods: {
+                async fetchTargets() {
+                    const res = await fetch('http://localhost:5000/targets', { credentials: 'include' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.targets = (Array.isArray(data) ? data : []).map(t => ({
+                            ...t,
+                            tags: Array.isArray(t.tags) ? t.tags : (typeof t.tags === 'string' && t.tags ? JSON.parse(t.tags) : [])
+                        }));
+                    } else {
+                        this.targets = [];
+                    }
+                },
                 highlight(text) {
                     if (!this.search) return text;
                     const s = this.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                     const reg = new RegExp(s, 'gi');
                     return text.replace(reg, match => `<span style="background:#6b4eff;color:#fff;border-radius:4px;padding:0 2px;">${match}</span>`);
                 },
-                performSearch() {
-                    // 搜索功能已通过计算属性实现
-                },
+                performSearch() {},
                 viewTarget(title) {
-                    window.location.href = 'test_page.html?title=' + encodeURIComponent(title);
+                    sessionStorage.setItem('roadmap_target_id', title);
+                    sessionStorage.setItem('roadmap_user_id', this.loggedInUsername);
+                    window.location.href = 'roadmap_page.html';
                 },
                 handleSidebarButtonClick(action) {
                     window.location.href = 'test_page.html?action=' + encodeURIComponent(action);
@@ -923,63 +931,60 @@
                 openForm(mode, target = null) {
                     this.formMode = mode;
                     if (mode === 'add') {
-                        this.currentFormTarget = { title: '', tags: '', progress: 0 };
+                        this.currentFormTarget = { target_id: '', tags: '', progress: 0 };
                     } else if (mode === 'edit' && target) {
-                        this.currentFormTarget = { ...target, originalTitle: target.title, tags: target.tags.join(', ') };
+                        this.currentFormTarget = {
+                            ...target,
+                            tags: Array.isArray(target.tags) ? target.tags.join(', ') : target.tags,
+                            originalId: target.id
+                        };
                     }
                     this.showForm = true;
                     document.body.style.overflow = 'hidden';
                 },
-                saveForm() {
-                    if (!this.currentFormTarget.title.trim()) {
-                        alert('标题不能为空！');
+                async saveForm() {
+                    if (!this.currentFormTarget.target_id.trim()) {
+                        alert('目标名不能为空！');
                         return;
                     }
-
-                    const today = new Date();
-                    const yyyy = today.getFullYear();
-                    const mm = String(today.getMonth() + 1).padStart(2, '0');
-                    const dd = String(today.getDate()).padStart(2, '0');
-                    const formattedDate = `${yyyy}-${mm}-${dd}`;
-
-                    const processedTarget = {
-                        title: this.currentFormTarget.title.trim(),
+                    const payload = {
+                        title: this.currentFormTarget.target_id.trim(),
                         progress: parseFloat(this.currentFormTarget.progress) || 0,
-                        tags: this.currentFormTarget.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
-                        update: formattedDate,
+                        tags: this.currentFormTarget.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
                     };
-
                     if (this.formMode === 'add') {
-                        this.targets.push(processedTarget);
+                        await fetch('http://localhost:5000/targets', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify(payload)
+                        });
                     } else {
-                        const index = this.targets.findIndex(t => t.title === this.currentFormTarget.originalTitle);
-                        if (index !== -1) {
-                            this.targets[index] = processedTarget;
-                        }
+                        const id = this.currentFormTarget.id || this.currentFormTarget.originalId;
+                        await fetch(`http://localhost:5000/targets/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify(payload)
+                        });
                     }
-
-                    // 保存到localStorage
-                    localStorage.setItem('targets', JSON.stringify(this.targets));
-
                     this.showForm = false;
                     this.currentFormTarget = null;
                     document.body.style.overflow = '';
+                    await this.fetchTargets();
                 },
                 cancelForm() {
                     this.showForm = false;
                     this.currentFormTarget = null;
                     document.body.style.overflow = '';
                 },
-                deleteTarget(title) {
-                    if (!confirm(`确定要删除学习目标 "${title}" 吗？`)) {
-                        return;
-                    }
-                    
-                    const index = this.targets.findIndex(t => t.title === title);
-                    if (index !== -1) {
-                        this.targets.splice(index, 1);
-                        localStorage.setItem('targets', JSON.stringify(this.targets));
-                    }
+                async deleteTarget(id) {
+                    if (!confirm('确定要删除该学习目标吗？')) return;
+                    await fetch(`http://localhost:5000/targets/${id}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    await this.fetchTargets();
                 },
                 attemptLogout() {
                     if (confirm('确定要退出登录吗？')) {
