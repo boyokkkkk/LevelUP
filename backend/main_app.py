@@ -8,27 +8,26 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.services.sign_in_service import init_user_db, add_user, verify_user
 from backend.services.target_service import init_target_db, add_target, get_targets, update_target, delete_target, search_targets
+from backend.roadmap_app import roadmap_app
+from backend.md_app import md_app, init_db
+from backend.todo_app import todo_app
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # 用于session加密
 
 # 配置CORS
-CORS(app, 
-     supports_credentials=True,
-     resources={r"/*": {"origins": ["http://127.0.0.1:5000", "http://localhost:5000"]}},
-     allow_headers=["Content-Type"],
-     expose_headers=["Content-Type"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+CORS(app, supports_credentials=True)
 
 # 修改session配置
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # 改为Lax
 app.config['SESSION_COOKIE_SECURE'] = False    # 开发环境设为False
 app.config['SESSION_COOKIE_HTTPONLY'] = True   # 增加安全性
-app.config['SESSION_COOKIE_DOMAIN'] = None     # 允许所有域名
+app.config['SESSION_COOKIE_DOMAIN'] = 'localhost'  # 支持跨端口session
 
 # 初始化数据库
 init_user_db()
 init_target_db()
+init_db()
 
 # 登录验证装饰器
 def login_required(f):
@@ -155,6 +154,10 @@ def search_user_targets():
         targets = search_targets(query, user_id)
     
     return jsonify(targets)
+
+app.register_blueprint(roadmap_app)
+app.register_blueprint(md_app)
+app.register_blueprint(todo_app)
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

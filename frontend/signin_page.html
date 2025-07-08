@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>LevelUP - 登录/注册</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- 引入 Google Fonts - Roboto 字体 -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
@@ -210,57 +210,64 @@
 
                     try {
                         if (this.isLogin) {
-                            // 登录逻辑
-                            const users = JSON.parse(localStorage.getItem('users') || '[]');
-                            const user = users.find(u => u.username === this.username);
-                            
-                            if (!user) {
-                                this.errorMessage = '用户名不存在！';
-                                this.showError = true;
-                                return;
-                            }
-
-                            // 验证密码（实际应用中应该使用加密）
-                            if (user.password !== this.password) {
-                                this.errorMessage = '密码错误！';
-                                this.showError = true;
-                                return;
-                            }
-
-                            // 登录成功，保存用户信息
-                            localStorage.setItem('currentUser', JSON.stringify({
-                                username: this.username
-                            }));
-
-                            // 跳转到主页
-                            window.location.href = 'main_web.html';
-                        } else {
-                            // 注册逻辑
-                            const users = JSON.parse(localStorage.getItem('users') || '[]');
-                            
-                            // 检查用户名是否已存在
-                            if (users.some(u => u.username === this.username)) {
-                                this.errorMessage = '用户名已存在！';
-                                this.showError = true;
-                                return;
-                            }
-
-                            // 添加新用户
-                            users.push({
-                                username: this.username,
-                                password: this.password // 实际应用中应该加密存储
+                            // 登录逻辑：请求后端API
+                            const res = await fetch('http://localhost:5000/login', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({
+                                    username: this.username,
+                                    password: this.password
+                                })
                             });
-
-                            // 保存用户列表
-                            localStorage.setItem('users', JSON.stringify(users));
-
-                            // 自动登录
-                            localStorage.setItem('currentUser', JSON.stringify({
-                                username: this.username
-                            }));
-
-                            // 跳转到主页
-                            window.location.href = 'main_web.html';
+                            const data = await res.json();
+                            if (data.success) {
+                                // 登录成功，保存用户信息
+                                localStorage.setItem('currentUser', JSON.stringify({
+                                    username: this.username
+                                }));
+                                window.location.href = 'main_web.html';
+                            } else {
+                                this.errorMessage = data.error || '登录失败！';
+                                this.showError = true;
+                            }
+                        } else {
+                            // 注册逻辑：请求后端API
+                            const res = await fetch('http://localhost:5000/register', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({
+                                    username: this.username,
+                                    password: this.password
+                                })
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                                // 注册成功后自动登录
+                                const loginRes = await fetch('http://localhost:5000/login', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({
+                                        username: this.username,
+                                        password: this.password
+                                    })
+                                });
+                                const loginData = await loginRes.json();
+                                if (loginData.success) {
+                                    localStorage.setItem('currentUser', JSON.stringify({
+                                        username: this.username
+                                    }));
+                                    window.location.href = 'main_web.html';
+                                } else {
+                                    this.errorMessage = loginData.error || '自动登录失败，请手动登录';
+                                    this.showError = true;
+                                }
+                            } else {
+                                this.errorMessage = data.error || '注册失败！';
+                                this.showError = true;
+                            }
                         }
                     } catch (error) {
                         console.error('操作失败:', error);
